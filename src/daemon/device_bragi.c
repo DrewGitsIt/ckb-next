@@ -62,6 +62,10 @@ static int setactive_bragi(usbdevice* kb, int active){
     if(active == BRAGI_MODE_HARDWARE)
         return 0;
 
+    // Entering SW mode resets the sensor DPI on the device, but not our cache - force the
+    // next updatedpi() past its change-detection guard so the DPI is actually re-sent.
+    kb->profile->lastdpi.forceupdate = 1;
+
     // Start poll thread for this device if it's not running already
     if(!kb->pollthread){
         kb->pollthread = malloc(sizeof(pthread_t));
@@ -135,6 +139,7 @@ static int setactive_bragi(usbdevice* kb, int active){
     } else if(light) {
         ckb_err("ckb%d: Bragi light init returned error 0x%hhx", ckb_id, (uchar)light);
     }
+
     return 0;
 }
 
@@ -240,6 +245,12 @@ static int start_bragi_common(usbdevice* kb){
 int start_mouse_bragi(usbdevice* kb, int makeactive){
     if(start_bragi_common(kb))
         return 1;
+
+    // The SABRE RGB PRO uses a planar RGB layout (5-byte per-channel stride, fixed
+    // 15-byte data length) that differs from the shared Bragi mouse vtable, and thus 
+    // the generic bragi code. The sabre_paint_dpi_bar method explains usage.
+    if(kb->product == P_SABRE_RGB_PRO)
+        kb->vtable.updatergb = updatergb_sabre_pro_bragi;
 
     if(makeactive)
         if(setactive_bragi(kb, BRAGI_MODE_SOFTWARE))

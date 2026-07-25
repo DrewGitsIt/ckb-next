@@ -53,6 +53,8 @@
 // Index of DPI light
 #define LED_DPI                 (LED_MOUSE + 2)
 #define DPI_RGB_START           (LED_MOUSE + 6)
+// Number of DPI stage-colour slots (dpi0..dpi5)
+#define DPI_RGB_COUNT           (N_MOUSE_ZONES_EXTENDED - (DPI_RGB_START - LED_MOUSE))
 // Total number of keys recognized by software
 #define N_KEYS_EXTENDED         (N_KEYS_INPUT + N_MOUSE_ZONES_EXTENDED)
 #define N_KEYBYTES_EXTENDED     ((N_KEYS_EXTENDED + 7) / 8)

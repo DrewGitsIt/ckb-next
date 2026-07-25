@@ -434,6 +434,23 @@ static const Key M55Keys[] = {
 };
 #define KEYCOUNT_M55    (sizeof(M55Keys) / sizeof(Key))
 
+// Sabre RGB PRO (Champion Series) - two paintable RGB zones (scroll wheel + logo).
+// The third light group, the 3-LED DPI bar, is driven by the daemon from the DPI stage
+// colours (not user-paintable), so it is not exposed as a swatch here.
+static const Key SabreProKeys[] = {
+    {nullptr,  "Left Mouse",       "mouse1",    8,  4, 14, 18, false, true},
+    {nullptr,  "Right Mouse",      "mouse2",   31,  4, 14, 18, false, true},
+    {nullptr,  "Middle Mouse",     "mouse3",   24,  6,  7,  8, false, true},
+    {nullptr,  "Wheel Up",         "wheelup",  24,  3,  7,  5, false, true},
+    {nullptr,  "Wheel Down",       "wheeldn",  24, 13,  7,  5, false, true},
+    {nullptr,  "DPI Cycle",        "dpiup",    24, 19,  6, 10, false, true},
+    {nullptr,  "Forward",          "mouse4",    6, 24,  5, 10, false, true},
+    {nullptr,  "Back",             "mouse5",    6, 33,  5, 10, false, true},
+    {nullptr,  "Wheel Light",      "wheel",    23, 15,  8,  6, true,  false},
+    {nullptr,  "Logo",             "back",     21, 50, 12, 12, true,  false}
+};
+#define KEYCOUNT_SABREPRO    (sizeof(SabreProKeys) / sizeof(Key))
+
 // K95 Platinum lightbar
 static const Key K95PLbar[] = {
     {nullptr, "Top Light Bar 1", "topbar1", 4, -3, LBS, true, false}, {nullptr, "Top Light Bar 2", "topbar2", 19, -3, LBS, true, false}, {nullptr, "Top Light Bar 3", "topbar3", 34, -3, LBS, true, false}, {nullptr, "Top Light Bar 4", "topbar4", 49, -3, LBS, true, false}, {nullptr, "Top Light Bar 5", "topbar5", 64, -3, LBS, true, false}, {nullptr, "Top Light Bar 6", "topbar6", 79, -3, LBS, true, false},
@@ -1463,6 +1480,16 @@ static QHash<QString, Key> getMap(KeyMap::Model model, KeyMap::Layout layout){
         }
         break;
     }
+    case KeyMap::SABREPRO:{
+        // Sabre RGB PRO
+        for(const Key* key = SabreProKeys; key < SabreProKeys + KEYCOUNT_SABREPRO; key++){
+            Key translatedKey = *key;
+            translatedKey.x += translatedKey.width / 2;
+            translatedKey.y += translatedKey.height / 2;
+            map[key->name] = translatedKey;
+        }
+        break;
+    }
     default:;    // <- stop GCC from complaining
     }
 
@@ -1674,6 +1701,8 @@ KeyMap::Model KeyMap::getModel(const QString& name){
         return STRAFE;
     if(lower == "m55")
         return M55;
+    if(lower == "sabrepro")
+        return SABREPRO;
     if(lower == "m65")
         return M65;
     if(lower == "sabre")
@@ -1765,6 +1794,8 @@ QString KeyMap::getModel(KeyMap::Model model){
         return "strafe";
     case M55:
         return "m55";
+    case SABREPRO:
+        return "sabrepro";
     case M65:
         return "m65";
     case SABRE:
@@ -1873,6 +1904,7 @@ int KeyMap::modelWidth(Model model){
     case M95:
         return M95_WIDTH;
     case M55:
+    case SABREPRO:
     case M65:
     case M65E:
     case SABRE:
@@ -1927,6 +1959,7 @@ int KeyMap::modelHeight(Model model){
     case K65_MINI:
         return K65_MINI_HEIGHT;
     case M55:
+    case SABREPRO:
     case M65:
     case M65E:
     case SABRE:
