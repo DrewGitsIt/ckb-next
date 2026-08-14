@@ -58,6 +58,8 @@ public slots:
     // Sets display colors. Pass an empty map to clear.
     // These will be displayed instead of the regular color map, if supplied.
     void displayColorMap(const ColorMap& newDisplayMap, const QSet<QString>& indicators, quint64 renderInterval);
+    // Highlights a key/button while it is physically held down (driven by daemon notify events)
+    void setKeyPressed(const QString& key, bool down);
 
 signals:
     // Emitted when the selection is changed.
@@ -75,6 +77,7 @@ private:
     QBitArray selection;
     QBitArray newSelection;
     QBitArray animation;
+    QBitArray pressed;
     // These should not be scaled so that the rect renders correctly
     QPointF mouseDown;
     QRectF mouseHighlightRect;

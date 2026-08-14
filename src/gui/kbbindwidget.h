@@ -20,6 +20,7 @@ public:
 
     void setBind(KbBind* newBind, KbProfile* newProfile);
     void setControlsEnabled(const bool e);
+    void setKeyPressed(const QString& key, bool down);
 
 private slots:
     void updateBind();

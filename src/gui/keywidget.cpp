@@ -120,6 +120,7 @@ void KeyWidget::map(const KeyMap& newMap){
     selection = QBitArray(keyMap.count());
     newSelection = QBitArray(keyMap.count());
     animation = QBitArray(keyMap.count());
+    pressed = QBitArray(keyMap.count());
     _aspectRatio = keyMap.width() / (float)keyMap.height();
     if(keyMap.isKeyboard())
         _aspectRatio -= 0.35;
@@ -321,6 +322,9 @@ void KeyWidget::paintGL(){
     default:
         highlight = selection;
     }
+    // Overlay physically-pressed keys/buttons on top of whatever is highlighted
+    if(pressed.size() == highlight.size())
+        highlight |= pressed;
 
     QPainter painter(this);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
@@ -946,6 +950,16 @@ void KeyWidget::setAnimationToSelection(){
 
 void KeyWidget::clearAnimation(){
     animation.fill(false);
+    update();
+}
+
+void KeyWidget::setKeyPressed(const QString& key, bool down){
+    const int index = keyMap.keys().indexOf(key);
+    if(index < 0 || index >= pressed.size())
+        return;
+    if(pressed.testBit(index) == down)
+        return;
+    pressed.setBit(index, down);
     update();
 }
 

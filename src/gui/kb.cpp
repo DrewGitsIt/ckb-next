@@ -572,6 +572,7 @@ void Kb::readNotify(const QString& line){
             mode->light()->animKeypress(keyName, keyPressed);
             mode->bind()->keyEvent(keyName, keyPressed);
         }
+        emit keyEvent(keyName, keyPressed);
         deviceIdleTimer.start();
     } else if (components[0] == "battery"){
         QStringList bComponents = components[1].split(':');

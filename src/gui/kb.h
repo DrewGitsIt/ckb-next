@@ -197,6 +197,9 @@ signals:
     void fwUpdateProgress(int current, int total);
     void fwUpdateFinished(bool succeeded);
 
+    // A key/button was pressed (true) or released (false) on the device
+    void keyEvent(const QString& key, bool pressed);
+
 public slots:
     // Send lighting and settings to the driver
     void frameUpdate();

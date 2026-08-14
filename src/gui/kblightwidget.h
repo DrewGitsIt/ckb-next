@@ -23,6 +23,7 @@ public:
     void setLight(KbLight* newLight);
     void setMonochrome();
     void setLegacyM95();
+    void setKeyPressed(const QString& key, bool down);
 
 private slots:
     void updateLight();

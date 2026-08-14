@@ -30,6 +30,11 @@ KbWidget::KbWidget(QWidget *parent, Kb *_device, XWindowDetector* windowDetector
     connect(device, &Kb::profileAdded, this, &KbWidget::updateProfileList);
     connect(device, &Kb::modeChanged, this, &KbWidget::modeChanged);
     connect(device, &Kb::infoUpdated, this, &KbWidget::devUpdate);
+    // Live-highlight the key/button grid on both tabs while a key is physically held
+    connect(device, &Kb::keyEvent, this, [this](const QString& key, bool pressed){
+        ui->bindWidget->setKeyPressed(key, pressed);
+        ui->lightWidget->setKeyPressed(key, pressed);
+    });
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
     connect(ui->batteryTrayBox, &QCheckBox::checkStateChanged, this, &KbWidget::batteryTrayBox_checkStateChanged);
 #else // QT_VERSION < 6.7.0

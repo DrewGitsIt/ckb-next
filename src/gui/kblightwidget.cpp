@@ -40,6 +40,10 @@ KbLightWidget::~KbLightWidget(){
     delete ui;
 }
 
+void KbLightWidget::setKeyPressed(const QString& key, bool down){
+    keyWidget->setKeyPressed(key, down);
+}
+
 void KbLightWidget::setLight(KbLight* newLight){
     keyWidget->clearSelection();
     keyWidget->clearAnimation();

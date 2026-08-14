@@ -30,6 +30,10 @@ KbBindWidget::~KbBindWidget(){
     delete ui;
 }
 
+void KbBindWidget::setKeyPressed(const QString& key, bool down){
+    keyWidget->setKeyPressed(key, down);
+}
+
 void KbBindWidget::setBind(KbBind* newBind, KbProfile* newProfile){
     keyWidget->clearSelection();
     ui->rbWidget->setBind(newBind, newProfile);
