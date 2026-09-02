@@ -434,9 +434,9 @@ static const Key M55Keys[] = {
 };
 #define KEYCOUNT_M55    (sizeof(M55Keys) / sizeof(Key))
 
-// Sabre RGB PRO (Champion Series) - two paintable RGB zones (scroll wheel + logo).
-// The third light group, the 3-LED DPI bar, is driven by the daemon from the DPI stage
-// colours (not user-paintable), so it is not exposed as a swatch here.
+// Sabre RGB PRO (Champion Series) - five paintable RGB zones: scroll wheel, logo, and
+// the 3-LED DPI bar (dpiw1..3, low stage to high). When the DPI indicator is enabled in
+// the Performance tab, it overlays the bar with the current stage's position and colour.
 static const Key SabreProKeys[] = {
     {nullptr,  "Left Mouse",       "mouse1",    8,  4, 14, 18, false, true},
     {nullptr,  "Right Mouse",      "mouse2",   31,  4, 14, 18, false, true},
@@ -447,6 +447,10 @@ static const Key SabreProKeys[] = {
     {nullptr,  "Forward",          "mouse4",    6, 24,  5, 10, false, true},
     {nullptr,  "Back",             "mouse5",    6, 33,  5, 10, false, true},
     {nullptr,  "Wheel Light",      "wheel",    23, 15,  8,  6, true,  false},
+    // Note: KeyWidget shrinks hitboxes by 2 units per axis, so keep these at least 6x6.
+    {nullptr,  "DPI 1",            "dpiw1",    17, 27,  6,  6, true,  false},
+    {nullptr,  "DPI 2",            "dpiw2",    24, 27,  6,  6, true,  false},
+    {nullptr,  "DPI 3",            "dpiw3",    31, 27,  6,  6, true,  false},
     {nullptr,  "Logo",             "back",     21, 50, 12, 12, true,  false}
 };
 #define KEYCOUNT_SABREPRO    (sizeof(SabreProKeys) / sizeof(Key))

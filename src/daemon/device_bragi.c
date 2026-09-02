@@ -246,12 +246,6 @@ int start_mouse_bragi(usbdevice* kb, int makeactive){
     if(start_bragi_common(kb))
         return 1;
 
-    // The SABRE RGB PRO uses a planar RGB layout (5-byte per-channel stride, fixed
-    // 15-byte data length) that differs from the shared Bragi mouse vtable, and thus 
-    // the generic bragi code. The sabre_paint_dpi_bar method explains usage.
-    if(kb->product == P_SABRE_RGB_PRO)
-        kb->vtable.updatergb = updatergb_sabre_pro_bragi;
-
     if(makeactive)
         if(setactive_bragi(kb, BRAGI_MODE_SOFTWARE))
             return 1;

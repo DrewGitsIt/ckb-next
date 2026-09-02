@@ -37,7 +37,8 @@ static inline size_t bragi_led_count(usbdevice* kb){
     LED_CASE_M(P_KATAR_PRO_XT, 1);
     LED_CASE_M(P_KATAR_PRO, 1);
     LED_CASE_M(P_M55_RGB_PRO, 2);
-    LED_CASE_M(P_SABRE_RGB_PRO, 3);
+    // logo, wheel, and the 3 individually-addressable DPI bar LEDs
+    LED_CASE_M(P_SABRE_RGB_PRO, 5);
     LED_CASE_K(P_K55_PRO, 6);
     LED_CASE_K(P_K55_PRO_XT, 137);
     LED_CASE_M(P_DARK_CORE_RGB_PRO, 12);
@@ -168,97 +169,4 @@ static inline int updatergb_alt_bragi(usbdevice* kb, int force){
 
 int updatergb_keyboard_bragi_alt(usbdevice* kb, int force){
     return updatergb_alt_bragi(kb, force);
-}
-
-// The SABRE RGB PRO is planar (R plane, then G, then B) like the generic Bragi path,
-// but at a fixed 5-byte stride instead of that path's tight zone-count stride: handle
-// 0x00 expects each plane at offsets 0/5/10, holding logo, wheel, and 3 dpi indicator LEDs
-// add up to a 15-byte data length. See how we use the dpi LEDs below:
-//     [Rlogo Rwheel Rdpi1 Rdpi2 Rdpi3][G...][B...]
-// Color index order (LED_MOUSE + i) matches the plane order: 0 = logo, 1 = wheel, 2 = dpi.
-#define SABRE_PLANE_STRIDE  5
-
-// Paint the SABRE's 3-LED DPI level meter into the packet's frame positions 2,3,4.
-// The bar shows the current DPI stage's position (x-- / xx- / -x- / -xx / --x) tinted by
-// that stage's own colour (DPI_RGB_START + stage). In hardware mode the firmware drives
-// these positionally; in software mode we must render them, or they collapse to a single
-// lit LED that merely changes colour. `start` points at the first plane; `stage` is
-// dpi.current, which runs 1..5 (0 is only the power-on default, never part of the cycle).
-static void sabre_paint_dpi_bar(uchar* start, const lighting* newlight, uchar stage){
-    static const uchar dpi_bar[5][3] = {
-        {1,0,0}, {1,1,0}, {0,1,0}, {0,1,1}, {0,0,1}
-    };
-    // Map the live stage onto the 5 pattern rows (0..4) - i.e. one less than dpi.current.
-    int pat = (int)stage - 1;
-    if(pat < 0)
-        pat = 0;
-    else if(pat > 4)
-        pat = 4;
-    // Colour comes from the DPI stage's own colour slot, indexed by the real stage.
-    uchar cstage = stage > 5 ? 5 : stage;
-    uchar cr = newlight->r[DPI_RGB_START + cstage];
-    uchar cg = newlight->g[DPI_RGB_START + cstage];
-    uchar cb = newlight->b[DPI_RGB_START + cstage];
-    // Frame positions 2,3,4 run physically right-to-left, so the leftmost pattern bit maps
-    // to the highest frame position (4-j) to match how the bar is seen on the mouse.
-    for(int j = 0; j < 3; j++){
-        uchar on = dpi_bar[pat][j];
-        start[0 * SABRE_PLANE_STRIDE + (4 - j)] = on ? cr : 0;
-        start[1 * SABRE_PLANE_STRIDE + (4 - j)] = on ? cg : 0;
-        start[2 * SABRE_PLANE_STRIDE + (4 - j)] = on ? cb : 0;
-    }
-}
-
-int updatergb_sabre_pro_bragi(usbdevice* kb, int force){
-    if(!kb->active)
-        return 0;
-    lighting* lastlight = &kb->profile->lastlight;
-    lighting* newlight = &kb->profile->currentmode->light;
-
-    // One source of truth for the zone count (see bragi_led_count: LED_CASE_M(P_SABRE_RGB_PRO, 3))
-    const size_t zones = bragi_led_count(kb);
-
-    // Shortcut if the lighting hasn't changed
-    if(!force && !lastlight->forceupdate && !newlight->forceupdate
-            && !rgbcmp(lastlight, newlight, zones, LED_MOUSE)
-            && !rgbcmp(lastlight, newlight, DPI_RGB_COUNT, DPI_RGB_START))
-        return 0;
-
-    uchar pkt[BRAGI_JUMBO_SIZE] = {0};
-    static_assert(sizeof(pkt) >= 7 + 3 * SABRE_PLANE_STRIDE, "Bragi RGB packet must be large enough for the SABRE layout");
-
-    // These checks compare against the still-blank pkt as an all-zero reference. 
-    // Switches LEDs off if it's all black so hw mode can turn them off entirely.
-    int newon  = memcmp(newlight->r + LED_MOUSE, pkt, zones) ||
-                 memcmp(newlight->g + LED_MOUSE, pkt, zones) ||
-                 memcmp(newlight->b + LED_MOUSE, pkt, zones);
-    int laston = memcmp(lastlight->r + LED_MOUSE, pkt, zones) ||
-                 memcmp(lastlight->g + LED_MOUSE, pkt, zones) ||
-                 memcmp(lastlight->b + LED_MOUSE, pkt, zones);
-
-    uchar* start = pkt + 7;
-    for(size_t i = 0; i < zones; i++){
-        start[0 * SABRE_PLANE_STRIDE + i] = newlight->r[LED_MOUSE + i];  // red plane
-        start[1 * SABRE_PLANE_STRIDE + i] = newlight->g[LED_MOUSE + i];  // green plane
-        start[2 * SABRE_PLANE_STRIDE + i] = newlight->b[LED_MOUSE + i];  // blue plane
-    }
-
-    // Overlay the software-mode DPI level meter on frame positions 2,3,4.
-    sabre_paint_dpi_bar(start, newlight, kb->profile->currentmode->dpi.current);
-
-    if(bragi_write_to_handle(kb, pkt, BRAGI_LIGHTING_HANDLE, sizeof(pkt), 3 * SABRE_PLANE_STRIDE))
-        return 1;
-
-    // Keep this check below the write to avoid a delay when turning the lights off.
-    if(newon != laston || force){
-        if(kb->brightness_mode == BRIGHTNESS_HARDWARE_COARSE)
-            bragi_set_property(kb, BRAGI_BRIGHTNESS_COARSE, newon ? 3 : 0);
-        else if(kb->brightness_mode == BRIGHTNESS_HARDWARE_FINE)
-            bragi_set_property(kb, BRAGI_BRIGHTNESS, newon ? 1000 : 0);
-    }
-
-    lastlight->forceupdate = newlight->forceupdate = 0;
-
-    memcpy(lastlight, newlight, sizeof(lighting));
-    return 0;
 }

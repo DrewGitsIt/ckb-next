@@ -27,6 +27,12 @@ static const keypatch sabrepropatch[] = {
     { 210+20, "dpiup", -1,            KEY_CORSAIR },
     { 237+20, "back",  LED_MOUSE,     KEY_NONE },
     { 238+20, "wheel", LED_MOUSE + 1, KEY_NONE },
+    // The 3-LED DPI bar. Frame positions run right-to-left physically, so the
+    // leftmost LED (dpiw1) is the highest zone index. Renaming these rows also
+    // removes the base keymap's duplicate "wheel" at LED_MOUSE + 3.
+    { 239+20, "dpiw3", LED_MOUSE + 2, KEY_NONE },
+    { 240+20, "dpiw2", LED_MOUSE + 3, KEY_NONE },
+    { 241+20, "dpiw1", LED_MOUSE + 4, KEY_NONE },
 };
 
 static const keypatch m95patch[] = {
